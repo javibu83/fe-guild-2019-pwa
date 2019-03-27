@@ -1,10 +1,11 @@
-const CACHE_STATIC_NAME = 'static_v1';
+const CACHE_STATIC_NAME = 'static_v3';
 // Add a new cache for dynamic content
-const CACHE_DYNAMIC_NAME = 'dynamic_v1';
+const CACHE_DYNAMIC_NAME = 'dynamic_v3';
 
 const URLS_TO_PRECACHE = [
-    '/',
+    '/fe-guild-2019-pwa/',
     'index.html',
+    'offline.html',
     'src/js/app.js',
     'src/js/feed.js',
     'src/lib/material.min.js',
@@ -12,6 +13,7 @@ const URLS_TO_PRECACHE = [
     'src/css/app.css',
     'src/css/feed.css',
     'src/images/main-image.jpg',
+    'src/images/main-image-lg.jpg',
     'https://fonts.googleapis.com/css?family=Roboto:400,700',
     'https://fonts.googleapis.com/icon?family=Material+Icons',
     //'https://code.getmdl.io/1.3.0/material.indigo-deep_orange.min.css"'
@@ -86,6 +88,13 @@ self.addEventListener('fetch', event => {
                         return response;
                     })
             })
-            .catch(error => console.log('[Service Worker] Dynamic cache error.', error))
+            .catch(error => {
+                return caches.open(CACHE_STATIC_NAME)
+                  .then(cache => {
+                    if (event.request.headers.get('accept').includes('text/html')) {
+                      return cache.match('/fe-guild-2019-pwa/offline.html');
+                    }
+                  });
+            })
     );
 });
