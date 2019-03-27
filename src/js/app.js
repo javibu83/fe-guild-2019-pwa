@@ -1,3 +1,5 @@
+let deferredPrompt;
+
 const manifest = { 
     "name": "Progressive Selfies",
     "short_name": "PWA Selfies",
@@ -78,4 +80,16 @@ window.addEventListener('load', () => {
         });
     }
 
+});
+
+window.addEventListener('beforeinstallprompt', event => {
+    // Prevent Chrome 67 and earlier from automatically showing the prompt
+    event.preventDefault();
+
+    console.log('beforeinstallprompt fired');
+
+    // Stash the event so it can be triggered later.
+    deferredPrompt = event;
+
+    return false;
 });
