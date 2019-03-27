@@ -1,4 +1,4 @@
-const CACHE_STATIC_NAME = 'static';
+const CACHE_STATIC_NAME = 'static_v1';
 const URLS_TO_PRECACHE = [
     '/',
     'index.html',
@@ -11,7 +11,7 @@ const URLS_TO_PRECACHE = [
     'src/images/main-image.jpg',
     'https://fonts.googleapis.com/css?family=Roboto:400,700',
     'https://fonts.googleapis.com/icon?family=Material+Icons',
-    // 'https://code.getmdl.io/1.3.0/material.indigo-deep_orange.min.css"'
+    //'https://code.getmdl.io/1.3.0/material.indigo-deep_orange.min.css"'
 ];
 
 self.addEventListener('install', event => {
