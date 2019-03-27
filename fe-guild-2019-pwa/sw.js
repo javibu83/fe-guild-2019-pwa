@@ -1,4 +1,7 @@
 const CACHE_STATIC_NAME = 'static_v1';
+// Add a new cache for dynamic content
+const CACHE_DYNAMIC_NAME = 'dynamic_v1';
+
 const URLS_TO_PRECACHE = [
     '/',
     'index.html',
@@ -31,16 +34,58 @@ self.addEventListener('install', event => {
 
 self.addEventListener('activate', event => {
     console.log('[Service Worker] Activating Service Worker ...', event);
-    return self.clients.claim();
+
+    event.waitUntil(
+        caches.keys()
+            .then(cacheNames => {
+                return Promise.all(cacheNames.map(cacheName => {
+                    if (cacheName !== CACHE_STATIC_NAME && cacheName !== CACHE_DYNAMIC_NAME) {
+                        console.log('[Service Worker] Removing old cache.', cacheName);
+                        return caches.delete(cacheName);
+                    }
+                }));
+            })
+            .then(() => {
+                console.log('[ServiceWorker] Claiming clients');
+                return self.clients.claim();
+            })
+    );
 });
 
 self.addEventListener('fetch', event => {
     console.log('[Service Worker] Fetching something ....', event);
 
-    // This fixes a weird bug in Chrome when you open the Developer Tools
-    if (event.request.cache === 'only-if-cached' && event.request.mode !== 'same-origin') {
-        return;
-    }
+    event.respondWith(
+        caches.match(event.request)
+            .then(response => {
+                if (response) {
+                    console.log(response);
+                    return response;
+                }
 
-    event.respondWith(fetch(event.request));
+                // Clone the request - a request is a stream and can be only consumed once
+                const requestToCache = event.request.clone();
+
+                // Try to make the original HTTP request as intended
+                return fetch(requestToCache)
+                    .then(response => {
+                        // If request fails or server responds with an error code, return that error immediately
+                        if (!response || response.status !== 200) {
+                            return response;
+                        }
+
+                        // Again clone the response because you need to add it into the cache and because it's used
+                        // for the final return response
+                        const responseToCache = response.clone();
+
+                        caches.open(CACHE_DYNAMIC_NAME)
+                            .then(cache => {
+                                cache.put(requestToCache, responseToCache);
+                            });
+
+                        return response;
+                    })
+            })
+            .catch(error => console.log('[Service Worker] Dynamic cache error.', error))
+    );
 });
